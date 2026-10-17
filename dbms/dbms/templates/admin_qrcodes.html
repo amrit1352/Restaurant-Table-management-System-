@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}QR Codes – Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="d-flex align-items-center justify-content-between mb-5">
+    <div>
+      <h2 class="text-white fw-bold mb-1">
+        <i class="bi bi-qr-code text-warning me-2"></i>Table QR Codes
+      </h2>
+      <p class="text-white-50 mb-0">Print and place these on each table. Customers scan to order.</p>
+    </div>
+    <a href="/admin" class="btn btn-outline-warning rounded-pill">
+      <i class="bi bi-arrow-left me-1"></i>Dashboard
+    </a>
+  </div>
+
+  <div class="row g-4">
+    {% for table in tables %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="qr-card dark-card rounded-4 p-4 text-center h-100">
+        <h6 class="text-warning mb-3">
+          <i class="bi bi-grid-3x3-gap me-1"></i>Table {{ table.table_number }}
+        </h6>
+
+        <!-- QR Code Image -->
+        <img src="{{ url_for('static', filename='qrcodes/table_' ~ table.table_number ~ '.png') }}"
+             alt="QR Code for Table {{ table.table_number }}"
+             class="img-fluid qr-img rounded-3 mb-3"
+             style="max-width:150px;">
+
+        <!-- Table Status -->
+        <div class="mb-3">
+          <span class="badge rounded-pill px-3
+            {% if table.status == 'available' %}bg-success
+            {% elif table.status == 'occupied' %}bg-danger
+            {% else %}bg-warning text-dark{% endif %}">
+            {{ table.status | capitalize }}
+          </span>
+        </div>
+
+        <!-- URL hint -->
+        <p class="text-white-50 small mb-3">
+          <code class="text-warning" style="font-size:0.75rem;">
+            /menu/{{ table.table_number }}
+          </code>
+        </p>
+
+        <!-- Action buttons -->
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('static', filename='qrcodes/table_' ~ table.table_number ~ '.png') }}"
+             download="table_{{ table.table_number }}_qr.png"
+             class="btn btn-sm btn-warning rounded-pill">
+            <i class="bi bi-download me-1"></i>Download
+          </a>
+          <a href="/menu/{{ table.table_number }}" target="_blank"
+             class="btn btn-sm btn-outline-light rounded-pill">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Test Link
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Print tip -->
+  <div class="alert alert-dark border border-warning mt-5 rounded-4" role="alert">
+    <i class="bi bi-lightbulb text-warning me-2"></i>
+    <strong class="text-warning">Tip:</strong>
+    <span class="text-white-50">
+      Download each QR code, print it, laminate it, and place it on the respective table.
+      Customers simply scan with any smartphone camera – no app required!
+    </span>
+  </div>
+
+</div>
+{% endblock %}

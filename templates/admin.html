@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard – RestaurantQR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-5">
+    <div>
+      <h2 class="text-white fw-bold mb-1">
+        <i class="bi bi-speedometer2 text-warning me-2"></i>Admin Dashboard
+      </h2>
+      <p class="text-white-50 mb-0">Manage all orders, track status, and monitor revenue.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/admin/menu" class="btn btn-outline-warning rounded-pill">
+        <i class="bi bi-menu-button-wide me-1"></i>Manage Menu
+      </a>
+      <a href="/admin/qrcodes" class="btn btn-outline-light rounded-pill">
+        <i class="bi bi-qr-code me-1"></i>QR Codes
+      </a>
+    </div>
+  </div>
+
+  <!-- ── STAT CARDS ─────────────────────────────────────── -->
+  <div class="row g-4 mb-5">
+
+    <div class="col-6 col-lg-3">
+      <div class="stat-card rounded-4 p-4 text-center stat-pending">
+        <i class="bi bi-hourglass-split fs-2 mb-2 d-block"></i>
+        <div class="stat-num">{{ summary.get('Pending', 0) }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="stat-card rounded-4 p-4 text-center stat-preparing">
+        <i class="bi bi-fire fs-2 mb-2 d-block"></i>
+        <div class="stat-num">{{ summary.get('Preparing', 0) }}</div>
+        <div class="stat-label">Preparing</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="stat-card rounded-4 p-4 text-center stat-served">
+        <i class="bi bi-check-circle fs-2 mb-2 d-block"></i>
+        <div class="stat-num">{{ summary.get('Served', 0) }}</div>
+        <div class="stat-label">Served</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="stat-card rounded-4 p-4 text-center stat-revenue">
+        <i class="bi bi-currency-rupee fs-2 mb-2 d-block"></i>
+        <div class="stat-num">₹{{ "%.0f" | format(total_revenue) }}</div>
+        <div class="stat-label">Total Revenue</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── ORDERS TABLE ──────────────────────────────────── -->
+  <div class="dark-card rounded-4 p-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="text-white fw-bold mb-0">
+        <i class="bi bi-list-ul text-warning me-2"></i>All Orders
+      </h5>
+
+      <!-- Filter buttons -->
+      <div class="btn-group" role="group">
+        <button class="btn btn-sm btn-dark filter-btn active" data-filter="all">All</button>
+        <button class="btn btn-sm btn-dark filter-btn" data-filter="Pending">Pending</button>
+        <button class="btn btn-sm btn-dark filter-btn" data-filter="Preparing">Preparing</button>
+        <button class="btn btn-sm btn-dark filter-btn" data-filter="Served">Served</button>
+        <button class="btn btn-sm btn-dark filter-btn" data-filter="Paid">Paid</button>
+      </div>
+    </div>
+
+    {% if orders %}
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle" id="ordersTable">
+        <thead>
+          <tr class="border-bottom border-secondary">
+            <th class="text-warning">#Order</th>
+            <th class="text-warning">Table</th>
+            <th class="text-warning">Amount</th>
+            <th class="text-warning">Status</th>
+            <th class="text-warning">Time</th>
+            <th class="text-warning text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody">
+          {% for order in orders %}
+          <tr class="order-row" data-status="{{ order.status }}">
+
+            <td>
+              <a href="/admin/order/{{ order.order_id }}"
+                 class="text-warning fw-bold text-decoration-none">
+                #{{ order.order_id }}
+              </a>
+            </td>
+
+            <td>
+              <span class="badge bg-secondary rounded-pill">
+                <i class="bi bi-grid-3x3-gap me-1"></i>Table {{ order.table_number }}
+              </span>
+            </td>
+
+            <td class="text-white fw-semibold">₹{{ "%.2f" | format(order.total_amount) }}</td>
+
+            <td>
+              <span class="badge rounded-pill
+                {% if order.status == 'Pending' %}bg-danger
+                {% elif order.status == 'Preparing' %}bg-warning text-dark
+                {% elif order.status == 'Served' %}bg-info text-dark
+                {% else %}bg-success{% endif %} px-3 py-2">
+                {% if order.status == 'Pending' %}<i class="bi bi-hourglass-split me-1"></i>
+                {% elif order.status == 'Preparing' %}<i class="bi bi-fire me-1"></i>
+                {% elif order.status == 'Served' %}<i class="bi bi-check-circle me-1"></i>
+                {% else %}<i class="bi bi-currency-rupee me-1"></i>{% endif %}
+                {{ order.status }}
+              </span>
+            </td>
+
+            <td class="text-white-50 small">{{ order.timestamp }}</td>
+
+            <td class="text-center">
+              <div class="d-flex gap-2 justify-content-center flex-wrap">
+
+                <!-- View Details -->
+                <a href="/admin/order/{{ order.order_id }}"
+                   class="btn btn-sm btn-outline-warning rounded-pill" title="View Details">
+                  <i class="bi bi-eye"></i>
+                </a>
+
+                <!-- Update Status Dropdown -->
+                <form action="/admin/update_status/{{ order.order_id }}" method="POST" class="d-inline">
+                  <select name="status" class="form-select form-select-sm status-select rounded-pill"
+                          onchange="this.form.submit()" title="Update Status">
+                    {% for s in ['Pending','Preparing','Served','Paid'] %}
+                    <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                  </select>
+                </form>
+
+                <!-- Quick Bill -->
+                <a href="/bill/{{ order.order_id }}"
+                   class="btn btn-sm btn-outline-light rounded-pill" title="View Bill">
+                  <i class="bi bi-receipt"></i>
+                </a>
+
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-inbox display-1 text-secondary mb-3 d-block"></i>
+      <h5 class="text-white-50">No orders yet</h5>
+      <p class="text-white-50 small">Orders will appear here once customers scan their QR codes and order.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter orders by status
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active','btn-warning'));
+    btn.classList.add('active','btn-warning');
+
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('.order-row').forEach(row => {
+      row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+    });
+  });
+});
+
+// Auto-refresh every 30 seconds to catch new orders
+setTimeout(() => { location.reload(); }, 30000);
+</script>
+{% endblock %}

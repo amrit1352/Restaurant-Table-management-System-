@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Error – RestaurantQR{% endblock %}
+{% block content %}
+<div class="container py-5 text-center" style="min-height:60vh;display:flex;align-items:center;justify-content:center;">
+  <div>
+    <i class="bi bi-exclamation-triangle display-1 text-warning mb-4 d-block"></i>
+    <h2 class="text-white fw-bold mb-2">Oops! Something went wrong</h2>
+    <p class="text-white-50 mb-4">{{ message }}</p>
+    <a href="/" class="btn btn-warning rounded-pill px-5">
+      <i class="bi bi-house me-2"></i>Go Home
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block title %}Live SQL Viewer – RestaurantQR{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── SQL Viewer specific styles ─────────────────────────── */
+  .sql-terminal {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  .sql-terminal .terminal-bar {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 10px 16px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width:12px; height:12px; border-radius:50%; }
+  .dot-red   { background:#ff5f57; }
+  .dot-yellow{ background:#ffbd2e; }
+  .dot-green { background:#28c840; }
+
+  .sql-keyword  { color: #ff7b72; font-weight: 700; }  /* SELECT, FROM … */
+  .sql-table    { color: #79c0ff; }                     /* table names     */
+  .sql-string   { color: #a5d6ff; }                     /* string literals */
+  .sql-number   { color: #f0883e; }                     /* numbers         */
+  .sql-operator { color: #d2a8ff; }                     /* WHERE = AND …   */
+  .sql-comment  { color: #8b949e; font-style: italic; } /* -- comments     */
+
+  .log-entry {
+    border-bottom: 1px solid #21262d;
+    padding: 12px 16px;
+    transition: background 0.2s;
+  }
+  .log-entry:hover { background: rgba(255,193,7,0.04); }
+  .log-entry:last-child { border-bottom: none; }
+
+  .route-badge {
+    font-size: 0.7rem;
+    background: rgba(121,192,255,0.15);
+    color: #79c0ff;
+    border: 1px solid rgba(121,192,255,0.25);
+    border-radius: 100px;
+    padding: 1px 8px;
+  }
+
+  .query-textarea {
+    background: #0d1117;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    resize: vertical;
+  }
+  .query-textarea:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 3px rgba(255,193,7,0.15);
+    background: #0d1117;
+    color: #e6edf3;
+  }
+
+  .schema-badge {
+    font-size:0.72rem;
+    background:rgba(255,193,7,0.12);
+    color:#ffc107;
+    border:1px solid rgba(255,193,7,0.25);
+    border-radius:100px;
+    padding:1px 8px;
+    white-space:nowrap;
+  }
+
+  .result-table th { color: #ffc107; font-size:0.82rem; }
+  .result-table td { font-size:0.82rem; font-family:'Courier New',monospace; }
+
+  .quick-btn { font-size:0.78rem; font-family:'Courier New',monospace; cursor:pointer; }
+
+  .pulse-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:#28c840;
+    animation: pulse 1.4s infinite;
+    display:inline-block;
+    margin-right:6px;
+  }
+  @keyframes pulse {
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:0.4; transform:scale(0.7); }
+  }
+
+  /* stat pill */
+  .stat-pill {
+    background:#161b22;
+    border:1px solid #30363d;
+    border-radius:8px;
+    padding:10px 18px;
+    text-align:center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- ── Page Header ──────────────────────────────────────── -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-5">
+    <div>
+      <h2 class="text-white fw-bold mb-1">
+        <i class="bi bi-terminal text-warning me-2"></i>Live SQL Query Viewer
+      </h2>
+      <p class="text-white-50 mb-0">
+        <span class="pulse-dot"></span>
+        Every database query is captured here in real-time.
+      </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/admin" class="btn btn-outline-warning rounded-pill btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Dashboard
+      </a>
+      <a href="/admin/sql/clear" class="btn btn-outline-danger rounded-pill btn-sm"
+         onclick="return confirm('Clear the query log?')">
+        <i class="bi bi-trash me-1"></i>Clear Log
+      </a>
+      <button onclick="location.reload()" class="btn btn-outline-light rounded-pill btn-sm">
+        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ══════════════════════════════════════════════════════
+         LEFT COLUMN – Schema + Query Runner
+    ══════════════════════════════════════════════════════ -->
+    <div class="col-lg-5">
+
+      <!-- ── Database Schema ────────────────────────────── -->
+      <div class="dark-card rounded-4 p-4 mb-4">
+        <h6 class="text-warning mb-3">
+          <i class="bi bi-diagram-3 me-2"></i>Database Schema
+        </h6>
+
+        <div class="accordion accordion-flush" id="schemaAccordion">
+          {% for tname, info in tables_info.items() %}
+          <div class="accordion-item" style="background:transparent;border:none;border-bottom:1px solid #21262d;">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed py-2"
+                      style="background:#161b22;color:#e6edf3;font-family:'Courier New',monospace;font-size:0.85rem;"
+                      type="button" data-bs-toggle="collapse"
+                      data-bs-target="#schema-{{ tname }}">
+                <i class="bi bi-table text-warning me-2"></i>
+                <strong>{{ tname }}</strong>
+                <span class="schema-badge ms-2">{{ info.row_count }} rows</span>
+              </button>
+            </h2>
+            <div id="schema-{{ tname }}" class="accordion-collapse collapse"
+                 data-bs-parent="#schemaAccordion">
+              <div class="accordion-body py-2 px-3" style="background:#0d1117;">
+                <table class="table table-sm mb-0" style="font-family:'Courier New',monospace;font-size:0.78rem;">
+                  <thead>
+                    <tr>
+                      <th class="text-warning border-0">Column</th>
+                      <th class="text-warning border-0">Type</th>
+                      <th class="text-warning border-0">Key</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for col in info.columns %}
+                    <tr style="border-color:#21262d;">
+                      <td class="text-info">{{ col.name }}</td>
+                      <td class="text-white-50">{{ col.type }}</td>
+                      <td>
+                        {% if col.pk %}<span class="badge bg-warning text-dark" style="font-size:0.65rem;">PK</span>{% endif %}
+                        {% if col.notnull and not col.pk %}<span class="badge bg-secondary" style="font-size:0.65rem;">NN</span>{% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ── Custom Query Runner ────────────────────────── -->
+      <div class="dark-card rounded-4 p-4">
+        <h6 class="text-warning mb-3">
+          <i class="bi bi-play-circle me-2"></i>Run Custom SQL Query
+        </h6>
+        <p class="text-white-50 small mb-3">
+          Type any SQL query below and click <strong class="text-warning">Run</strong> to execute it live.
+        </p>
+
+        <!-- Quick query buttons -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          {% set quick_queries = [
+            ("All Tables", "SELECT name FROM sqlite_master WHERE type='table';"),
+            ("All Orders", "SELECT * FROM orders ORDER BY timestamp DESC;"),
+            ("All Menu", "SELECT item_name, price, category FROM menu;"),
+            ("All Tables Status", "SELECT table_number, status FROM tables;"),
+            ("Order Items", "SELECT o.order_id, m.item_name, oi.quantity FROM order_items oi JOIN orders o ON oi.order_id=o.order_id JOIN menu m ON oi.item_id=m.item_id;"),
+            ("Revenue", "SELECT SUM(total_amount) AS total_revenue FROM orders WHERE status='Paid';"),
+          ] %}
+          {% for label, q in quick_queries %}
+          <button class="btn btn-sm btn-outline-secondary rounded-pill quick-btn"
+                  onclick="document.getElementById('sqlInput').value = `{{ q }}`">
+            {{ label }}
+          </button>
+          {% endfor %}
+        </div>
+
+        <form action="/admin/sql/run" method="POST">
+          <textarea id="sqlInput" name="query" rows="5"
+                    class="form-control query-textarea rounded-3 mb-3"
+                    placeholder="SELECT * FROM orders WHERE status = 'Pending';">{% if query_result is defined %}{{ query_result.query }}{% endif %}</textarea>
+          <button type="submit" class="btn btn-warning rounded-pill px-4 w-100">
+            <i class="bi bi-play-fill me-2"></i>Run Query
+          </button>
+        </form>
+
+        <!-- Query Result -->
+        {% if query_result is defined %}
+        <div class="mt-4">
+          {% if query_result.error %}
+          <div class="alert alert-danger rounded-3 py-2">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Error:</strong> {{ query_result.error }}
+          </div>
+          {% elif query_result.columns %}
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <small class="text-success">
+              <i class="bi bi-check-circle me-1"></i>
+              {{ query_result.rows | length }} row(s) returned
+            </small>
+          </div>
+          <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
+            <table class="table table-dark table-sm table-hover result-table">
+              <thead class="sticky-top">
+                <tr>
+                  {% for col in query_result.columns %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in query_result.rows %}
+                <tr>
+                  {% for cell in row %}
+                  <td>{{ cell if cell is not none else 'NULL' }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert alert-success rounded-3 py-2">
+            <i class="bi bi-check-circle me-1"></i>
+            Query executed. {{ query_result.rows_affected }} row(s) affected.
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         RIGHT COLUMN – Live Query Log
+    ══════════════════════════════════════════════════════ -->
+    <div class="col-lg-7">
+
+      <!-- Stats row -->
+      <div class="row g-3 mb-4">
+        <div class="col-4">
+          <div class="stat-pill">
+            <div class="text-warning fw-bold fs-4">{{ sql_log | length }}</div>
+            <div class="text-white-50 small">Total Queries</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="stat-pill">
+            <div class="text-info fw-bold fs-4">
+              {{ sql_log | selectattr("sql", "match", "^SELECT.*") | list | length }}
+            </div>
+            <div class="text-white-50 small">SELECT</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="stat-pill">
+            <div class="text-success fw-bold fs-4">
+              {{ sql_log | selectattr("sql", "match", "^(INSERT|UPDATE|DELETE).*") | list | length }}
+            </div>
+            <div class="text-white-50 small">Write Ops</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Query Log Terminal -->
+      <div class="sql-terminal">
+        <!-- Terminal title bar -->
+        <div class="terminal-bar">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="text-white-50 small ms-3 font-monospace">
+            restaurant.db — query log ({{ sql_log | length }} entries)
+          </span>
+        </div>
+
+        <!-- Log entries -->
+        <div style="max-height:600px; overflow-y:auto; padding: 4px 0;">
+          {% if sql_log %}
+            {% for entry in sql_log %}
+            <div class="log-entry">
+
+              <!-- Meta row -->
+              <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                <span class="text-white-50" style="font-size:0.72rem; font-family:'Courier New',monospace;">
+                  {{ entry.timestamp }}
+                </span>
+                <span class="route-badge">{{ entry.route }}</span>
+                <!-- Query type badge -->
+                {% set qtype = entry.sql.split()[0].upper() if entry.sql else '' %}
+                <span class="badge rounded-pill px-2
+                  {% if qtype == 'SELECT' %}bg-primary
+                  {% elif qtype == 'INSERT' %}bg-success
+                  {% elif qtype == 'UPDATE' %}bg-warning text-dark
+                  {% elif qtype == 'DELETE' %}bg-danger
+                  {% elif qtype == 'CREATE' %}bg-info text-dark
+                  {% else %}bg-secondary{% endif %}"
+                  style="font-size:0.65rem;">
+                  {{ qtype }}
+                </span>
+                {% if entry.rows is not none %}
+                <span class="text-white-50" style="font-size:0.7rem;">
+                  → {{ entry.rows }} rows
+                </span>
+                {% endif %}
+              </div>
+
+              <!-- SQL text with syntax colouring -->
+              <div style="font-family:'Courier New',monospace; font-size:0.82rem; line-height:1.6; white-space:pre-wrap; word-break:break-all;">
+                {{ entry.sql | highlight_sql }}
+              </div>
+
+              <!-- Parameters -->
+              {% if entry.params %}
+              <div class="mt-1" style="font-size:0.75rem; font-family:'Courier New',monospace;">
+                <span class="text-white-50">params: </span>
+                <span class="text-warning">{{ entry.params }}</span>
+              </div>
+              {% endif %}
+
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="text-center py-5 text-white-50">
+            <i class="bi bi-hourglass display-4 d-block mb-3"></i>
+            No queries logged yet.<br>
+            <small>Navigate around the app to generate queries.</small>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Tip -->
+      <div class="alert alert-dark border border-warning rounded-4 mt-3" role="alert">
+        <i class="bi bi-lightbulb text-warning me-2"></i>
+        <span class="text-warning fw-semibold">Examiner Tip:</span>
+        <span class="text-white-50 small">
+          Navigate to any page (menu, cart, admin) and come back here — you'll see exactly which
+          SQL queries were triggered. Use the <strong>Quick Queries</strong> buttons on the left
+          to demonstrate SELECT, JOIN, and aggregate queries live.
+        </span>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh the log every 10 seconds so new queries appear automatically
+let autoRefresh = setInterval(() => { location.reload(); }, 10000);
+
+// Stop auto-refresh if user is typing in the query box
+document.getElementById('sqlInput').addEventListener('focus', () => {
+  clearInterval(autoRefresh);
+});
+</script>
+{% endblock %}

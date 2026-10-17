@@ -1,0 +1,379 @@
+/* ================================================================
+   RestaurantQR – Global Stylesheet
+   Dark, premium restaurant theme with warm amber accents
+   ================================================================ */
+
+/* ── FONTS & RESET ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold:       #ffc107;
+  --gold-light: #ffe082;
+  --dark-bg:    #0a0a0a;
+  --dark-card:  #141414;
+  --dark-card2: #1a1a1a;
+  --dark-border:#2a2a2a;
+  --text-muted: rgba(255,255,255,0.45);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--dark-bg);
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* ── NAVBAR ────────────────────────────────────────────────── */
+#mainNav {
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.navbar-nav .nav-link {
+  color: rgba(255,255,255,0.7) !important;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.navbar-nav .nav-link:hover {
+  color: var(--gold) !important;
+  background: rgba(255,193,7,0.1);
+}
+
+/* ── HERO SECTION ──────────────────────────────────────────── */
+.hero-section {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a0a00 50%, #0a0a0a 100%);
+  border-bottom: 1px solid var(--dark-border);
+  position: relative;
+  overflow: hidden;
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 60% 50%, rgba(255,193,7,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,193,7,0.15);
+  border: 1px solid rgba(255,193,7,0.3);
+  color: var(--gold);
+  padding: 6px 18px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── STEP CARDS (How it Works) ─────────────────────────────── */
+.step-card {
+  background: var(--dark-card2);
+  border: 1px solid var(--dark-border);
+  transition: transform 0.3s, border-color 0.3s;
+  position: relative;
+}
+.step-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--gold);
+}
+
+.step-number {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px; height: 28px;
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── TABLE CARDS (Home page) ────────────────────────────────── */
+.table-card {
+  border: 1px solid var(--dark-border);
+  transition: transform 0.25s, border-color 0.25s;
+  position: relative;
+}
+.table-card:hover { transform: translateY(-4px); }
+
+.table-available { background: rgba(25,135,84,0.12); border-color: rgba(25,135,84,0.3); color:#198754; }
+.table-available i, .table-available h5 { color: #fff; }
+
+.table-occupied  { background: rgba(220,53,69,0.12); border-color: rgba(220,53,69,0.3); }
+.table-occupied i, .table-occupied h5 { color: #fff; }
+
+.table-reserved  { background: rgba(255,193,7,0.1); border-color: rgba(255,193,7,0.3); }
+.table-reserved i, .table-reserved h5 { color: #fff; }
+
+/* ── MENU PAGE ──────────────────────────────────────────────── */
+.menu-header {
+  background: linear-gradient(135deg, #0a0a0a, #1a0a00);
+  border-bottom: 1px solid var(--dark-border);
+  padding-top: 48px;
+  padding-bottom: 48px;
+  position: relative;
+}
+
+.table-badge {
+  background: rgba(255,193,7,0.15);
+  border: 1px solid rgba(255,193,7,0.4);
+  color: var(--gold);
+  padding: 4px 16px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Floating cart button */
+.cart-float {
+  position: absolute;
+  right: 24px;
+  bottom: -20px;
+  font-weight: 600;
+  padding: 10px 22px;
+  box-shadow: 0 4px 24px rgba(255,193,7,0.35) !important;
+  z-index: 50;
+}
+
+.cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  background: #000;
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 50%;
+  margin-left: 6px;
+}
+
+/* Category tab bar */
+.sticky-tabs {
+  background: var(--dark-card);
+  border-bottom: 1px solid var(--dark-border);
+  position: sticky;
+  top: 56px;
+  z-index: 40;
+  margin-top: 28px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Menu item card */
+.menu-item-card {
+  background: var(--dark-card2);
+  border: 1px solid var(--dark-border);
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+.menu-item-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,193,7,0.5);
+  box-shadow: 0 8px 32px rgba(255,193,7,0.1);
+}
+
+.price-tag {
+  background: rgba(255,193,7,0.15);
+  color: var(--gold);
+  padding: 2px 12px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.category-bar {
+  width: 4px;
+  height: 28px;
+  background: var(--gold);
+  border-radius: 4px;
+}
+
+.add-btn {
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.add-btn:hover { transform: scale(1.03); }
+
+/* Bottom sticky cart bar */
+.bottom-cart-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(20,20,20,0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--dark-border);
+  z-index: 100;
+}
+
+/* ── CART PAGE ──────────────────────────────────────────────── */
+.cart-item-row {
+  background: var(--dark-card2);
+  border: 1px solid var(--dark-border);
+  transition: border-color 0.2s;
+}
+.cart-item-row:hover { border-color: rgba(255,193,7,0.3); }
+
+.item-icon {
+  width: 46px; height: 46px;
+  background: rgba(255,193,7,0.1);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.qty-btn {
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+
+.summary-row { font-size: 0.95rem; }
+
+/* ── BILL PAGE ──────────────────────────────────────────────── */
+.success-circle {
+  width: 80px; height: 80px;
+  background: rgba(25,135,84,0.15);
+  border: 2px solid #198754;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.bill-card {
+  background: var(--dark-card);
+  border: 1px solid var(--dark-border);
+}
+
+/* Status badges */
+.status-badge { font-size: 0.9rem; }
+.status-pending    { background: rgba(220,53,69,0.2);  color: #ff6b6b; border: 1px solid rgba(220,53,69,0.4); }
+.status-preparing  { background: rgba(255,193,7,0.2);  color: var(--gold); border: 1px solid rgba(255,193,7,0.4); }
+.status-served     { background: rgba(13,202,240,0.2); color: #0dcaf0; border: 1px solid rgba(13,202,240,0.4); }
+.status-paid       { background: rgba(25,135,84,0.2);  color: #20c997; border: 1px solid rgba(25,135,84,0.4); }
+
+/* Status tracker */
+.status-track { position: relative; }
+.track-step { color: var(--text-muted); font-size: 0.75rem; }
+.track-step.active small { color: var(--gold); font-weight: 700; }
+.track-step.done small { color: #20c997; }
+
+.track-dot {
+  width: 14px; height: 14px;
+  background: var(--dark-border);
+  border-radius: 50%;
+  border: 2px solid #444;
+}
+.track-step.active .track-dot {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(255,193,7,0.25);
+}
+.track-step.done .track-dot {
+  background: #20c997;
+  border-color: #20c997;
+}
+
+/* ── ADMIN ──────────────────────────────────────────────────── */
+.stat-card {
+  border: 1px solid var(--dark-border);
+  transition: transform 0.25s;
+}
+.stat-card:hover { transform: translateY(-4px); }
+
+.stat-num {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.stat-label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.stat-pending   { background: rgba(220,53,69,0.12);  border-color: rgba(220,53,69,0.3);  color: #ff6b6b; }
+.stat-preparing { background: rgba(255,193,7,0.12);  border-color: rgba(255,193,7,0.3);  color: var(--gold); }
+.stat-served    { background: rgba(13,202,240,0.12); border-color: rgba(13,202,240,0.3); color: #0dcaf0; }
+.stat-revenue   { background: rgba(25,135,84,0.12);  border-color: rgba(25,135,84,0.3);  color: #20c997; }
+
+.status-select {
+  background: var(--dark-card2);
+  color: #fff;
+  border-color: var(--dark-border);
+  font-size: 0.8rem;
+  min-width: 130px;
+}
+.status-select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(255,193,7,0.2); }
+
+.filter-btn.active {
+  background: var(--gold) !important;
+  color: #000 !important;
+  border-color: var(--gold) !important;
+}
+
+/* ── QR CODES PAGE ──────────────────────────────────────────── */
+.qr-img {
+  border: 2px solid var(--dark-border);
+  padding: 8px;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.qr-card:hover .qr-img { transform: scale(1.05); }
+
+/* ── SHARED COMPONENTS ──────────────────────────────────────── */
+.dark-card {
+  background: var(--dark-card);
+  border: 1px solid var(--dark-border);
+}
+
+/* Footer */
+.footer-dark {
+  background: var(--dark-card);
+  border-top: 1px solid var(--dark-border);
+}
+
+/* Tables (Bootstrap override for dark) */
+.table-dark { --bs-table-bg: transparent; --bs-table-border-color: var(--dark-border); }
+.table-dark td, .table-dark th { border-color: var(--dark-border); }
+.table-hover > tbody > tr:hover > * { background-color: rgba(255,193,7,0.04); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--dark-bg); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* ── PRINT STYLES ───────────────────────────────────────────── */
+@media print {
+  #mainNav, footer, .btn, .status-track { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .bill-card { border: 1px solid #ccc !important; background: #fff !important; }
+  .text-white, .text-warning, .text-white-50 { color: #000 !important; }
+}
+
+/* ── RESPONSIVE TWEAKS ──────────────────────────────────────── */
+@media (max-width: 576px) {
+  .cart-item-row { flex-direction: column; align-items: flex-start !important; gap: 12px; }
+  .cart-float { right: 12px; }
+  .hero-section { padding-top: 48px; padding-bottom: 48px; }
+}

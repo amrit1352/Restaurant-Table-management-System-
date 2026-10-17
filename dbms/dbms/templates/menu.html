@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Menu – Table {{ table.table_number }}{% endblock %}
+
+{% block content %}
+
+<!-- ─── HEADER BAR ─────────────────────────────────────── -->
+<div class="menu-header py-4 text-white text-center position-relative">
+  <div class="container">
+    <span class="table-badge mb-2 d-inline-block">
+      <i class="bi bi-grid-3x3-gap me-1"></i> Table {{ table.table_number }}
+    </span>
+    <h1 class="fw-bold" style="font-family:'Playfair Display',serif;">
+      Our <span class="text-warning">Menu</span>
+    </h1>
+    <p class="text-white-50 mb-0">Tap any item to add it to your cart</p>
+  </div>
+
+  <!-- Floating cart button -->
+  <a href="/cart/{{ table_number }}" class="cart-float btn btn-warning rounded-pill shadow-lg">
+    <i class="bi bi-cart3 me-1"></i>
+    Cart
+    {% if cart_count > 0 %}
+      <span class="cart-badge">{{ cart_count }}</span>
+    {% endif %}
+  </a>
+</div>
+
+<!-- ─── CATEGORY FILTER TABS ──────────────────────────── -->
+<div class="sticky-tabs py-2 px-3">
+  <div class="container">
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-warning btn-sm rounded-pill tab-btn active" data-cat="all">
+        <i class="bi bi-grid me-1"></i>All
+      </button>
+      {% for cat in menu_by_category.keys() %}
+      <button class="btn btn-outline-warning btn-sm rounded-pill tab-btn" data-cat="{{ cat }}">
+        {% if cat == "Starters" %}<i class="bi bi-egg-fried me-1"></i>
+        {% elif cat == "Main Course" %}<i class="bi bi-bowl-hot me-1"></i>
+        {% elif cat == "Breads" %}<i class="bi bi-bookmark me-1"></i>
+        {% elif cat == "Desserts" %}<i class="bi bi-cake me-1"></i>
+        {% elif cat == "Beverages" %}<i class="bi bi-cup-straw me-1"></i>
+        {% else %}<i class="bi bi-star me-1"></i>{% endif %}
+        {{ cat }}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ─── MENU ITEMS ─────────────────────────────────────── -->
+<div class="container py-4">
+  {% for category, items in menu_by_category.items() %}
+  <div class="menu-section mb-5" data-section="{{ category }}">
+    <div class="d-flex align-items-center mb-3">
+      <div class="category-bar me-3"></div>
+      <h3 class="text-white fw-bold mb-0">
+        {% if category == "Starters" %}🥗{% elif category == "Main Course" %}🍛
+        {% elif category == "Breads" %}🫓{% elif category == "Desserts" %}🍮
+        {% elif category == "Beverages" %}🥤{% else %}🍽️{% endif %}
+        {{ category }}
+      </h3>
+    </div>
+
+    <div class="row g-3">
+      {% for item in items %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="menu-item-card rounded-4 p-3 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h6 class="text-white fw-bold mb-1">{{ item.item_name }}</h6>
+              <span class="price-tag">₹{{ item.price }}</span>
+            </div>
+            <p class="text-white-50 small mb-0">{{ item.description }}</p>
+          </div>
+          <div class="mt-3">
+            <a href="/add_to_cart/{{ table_number }}/{{ item.item_id }}"
+               class="btn btn-warning btn-sm rounded-pill w-100 add-btn">
+              <i class="bi bi-plus-circle me-1"></i>Add to Cart
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ─── BOTTOM CART BAR ────────────────────────────────── -->
+{% if cart_count > 0 %}
+<div class="bottom-cart-bar d-flex justify-content-between align-items-center px-4 py-3">
+  <span class="text-white">
+    <i class="bi bi-cart-check me-2 text-warning"></i>
+    <strong>{{ cart_count }}</strong> item{{ 's' if cart_count != 1 }} in cart
+  </span>
+  <a href="/cart/{{ table_number }}" class="btn btn-warning rounded-pill px-4">
+    View Cart <i class="bi bi-arrow-right ms-1"></i>
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Category tab filtering
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Toggle active state
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active', 'btn-warning');
+      b.classList.add('btn-outline-warning');
+    });
+    btn.classList.add('active', 'btn-warning');
+    btn.classList.remove('btn-outline-warning');
+
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.menu-section').forEach(section => {
+      if (cat === 'all' || section.dataset.section === cat) {
+        section.style.display = 'block';
+      } else {
+        section.style.display = 'none';
+      }
+    });
+  });
+});
+
+// Add-to-cart animation
+document.querySelectorAll('.add-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Added!';
+    btn.classList.remove('btn-warning');
+    btn.classList.add('btn-success');
+    // Reset after 1s (page will reload anyway)
+    setTimeout(() => {
+      btn.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Add to Cart';
+      btn.classList.add('btn-warning');
+      btn.classList.remove('btn-success');
+    }, 1000);
+  });
+});
+</script>
+{% endblock %}

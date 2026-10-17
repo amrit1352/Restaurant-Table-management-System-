@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.order_id }} – Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:750px;">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/admin" class="btn btn-outline-warning rounded-pill">
+      <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+    <div>
+      <h2 class="text-white fw-bold mb-0">Order #{{ order.order_id }}</h2>
+      <small class="text-white-50">
+        <i class="bi bi-grid-3x3-gap me-1"></i>Table {{ order.table_number }} &nbsp;|&nbsp;
+        <i class="bi bi-clock me-1"></i>{{ order.timestamp }}
+      </small>
+    </div>
+  </div>
+
+  <div class="dark-card rounded-4 p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="text-white mb-0"><i class="bi bi-bag text-warning me-2"></i>Items Ordered</h5>
+      <span class="badge rounded-pill px-3 py-2
+        {% if order.status == 'Pending' %}bg-danger
+        {% elif order.status == 'Preparing' %}bg-warning text-dark
+        {% elif order.status == 'Served' %}bg-info text-dark
+        {% else %}bg-success{% endif %}">
+        {{ order.status }}
+      </span>
+    </div>
+
+    <table class="table table-dark table-borderless">
+      <thead>
+        <tr class="border-bottom border-secondary">
+          <th class="text-warning">Item</th>
+          <th class="text-warning text-center">Qty</th>
+          <th class="text-warning text-end">Price</th>
+          <th class="text-warning text-end">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="text-white">{{ item.item_name }}</td>
+          <td class="text-white-50 text-center">{{ item.quantity }}</td>
+          <td class="text-white-50 text-end">₹{{ "%.2f" | format(item.price) }}</td>
+          <td class="text-white text-end fw-semibold">₹{{ "%.2f" | format(item.subtotal) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="border-top border-secondary">
+          <td colspan="3" class="text-warning fw-bold text-end">Grand Total</td>
+          <td class="text-warning fw-bold text-end fs-5">₹{{ "%.2f" | format(order.total_amount) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Update Status -->
+  <div class="dark-card rounded-4 p-4">
+    <h5 class="text-white mb-4"><i class="bi bi-arrow-repeat text-warning me-2"></i>Update Status</h5>
+    <form action="/admin/update_status/{{ order.order_id }}" method="POST"
+          class="d-flex gap-3 align-items-center flex-wrap">
+      {% for s in ['Pending', 'Preparing', 'Served', 'Paid'] %}
+      <button type="submit" name="status" value="{{ s }}"
+              class="btn rounded-pill px-4 flex-fill
+                {% if order.status == s %}
+                  {% if s == 'Pending' %}btn-danger
+                  {% elif s == 'Preparing' %}btn-warning text-dark
+                  {% elif s == 'Served' %}btn-info text-dark
+                  {% else %}btn-success{% endif %}
+                {% else %}btn-outline-secondary{% endif %}">
+        {% if s == 'Pending' %}<i class="bi bi-hourglass-split me-1"></i>
+        {% elif s == 'Preparing' %}<i class="bi bi-fire me-1"></i>
+        {% elif s == 'Served' %}<i class="bi bi-check-circle me-1"></i>
+        {% else %}<i class="bi bi-currency-rupee me-1"></i>{% endif %}
+        {{ s }}
+      </button>
+      {% endfor %}
+    </form>
+  </div>
+
+</div>
+{% endblock %}

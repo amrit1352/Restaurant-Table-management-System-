@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}RestaurantQR – Home{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════ HERO ══════════════════════════════════════ -->
+<section class="hero-section text-white text-center py-5">
+  <div class="container py-4">
+    <div class="hero-badge mb-3">
+      <i class="bi bi-qr-code-scan me-2"></i>Scan · Order · Enjoy
+    </div>
+    <h1 class="display-4 fw-bold mb-3" style="font-family:'Playfair Display',serif;">
+      Welcome to <span class="text-warning">RestaurantQR</span>
+    </h1>
+    <p class="lead mb-4 text-white-50">
+      A modern, contactless dining experience. Scan your table's QR code,<br>
+      browse our menu, and order without waiting for a waiter.
+    </p>
+    <a href="/admin" class="btn btn-warning btn-lg rounded-pill px-5 me-2 shadow">
+      <i class="bi bi-speedometer2 me-2"></i>Admin Dashboard
+    </a>
+    <a href="/admin/qrcodes" class="btn btn-outline-light btn-lg rounded-pill px-5">
+      <i class="bi bi-qr-code me-2"></i>View QR Codes
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════ HOW IT WORKS ══════════════════════════════ -->
+<section class="py-5 bg-dark">
+  <div class="container">
+    <h2 class="text-center text-white fw-bold mb-5">
+      How It <span class="text-warning">Works</span>
+    </h2>
+    <div class="row g-4 justify-content-center">
+      {% for step in [
+        ("bi-qr-code-scan","Scan QR Code","Every table has a unique QR code. Scan it with your phone camera.","1"),
+        ("bi-menu-button-wide","Browse Menu","View our full menu categorised by Starters, Main Course, Desserts & more.","2"),
+        ("bi-cart-plus","Add to Cart","Select items, adjust quantities, and review your cart before ordering.","3"),
+        ("bi-receipt","Get Your Bill","Place the order and receive an instant itemised bill with 5% GST.","4"),
+      ] %}
+      <div class="col-md-3 col-sm-6">
+        <div class="step-card text-center p-4 rounded-4 h-100">
+          <div class="step-number mb-3">{{ step[3] }}</div>
+          <div class="step-icon mb-3">
+            <i class="bi {{ step[0] }} fs-1 text-warning"></i>
+          </div>
+          <h5 class="text-white fw-semibold">{{ step[1] }}</h5>
+          <p class="text-white-50 small mb-0">{{ step[2] }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ TABLE STATUS ══════════════════════════════ -->
+<section class="py-5" style="background:#111;">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="text-white fw-bold mb-0">
+        Restaurant <span class="text-warning">Tables</span>
+      </h2>
+      <span class="badge bg-warning text-dark fs-6">{{ tables|length }} Tables</span>
+    </div>
+
+    <div class="row g-3">
+      {% for table in tables %}
+      <div class="col-6 col-md-3 col-lg-2">
+        <div class="table-card text-center p-3 rounded-4
+          {% if table.status == 'available' %}table-available
+          {% elif table.status == 'occupied' %}table-occupied
+          {% else %}table-reserved{% endif %}">
+
+          <i class="bi bi-grid-3x3-gap fs-2 mb-2 d-block"></i>
+          <h5 class="fw-bold mb-1">Table {{ table.table_number }}</h5>
+          <span class="badge
+            {% if table.status == 'available' %}bg-success
+            {% elif table.status == 'occupied' %}bg-danger
+            {% else %}bg-warning text-dark{% endif %} mb-2">
+            {{ table.status | capitalize }}
+          </span>
+          <div class="d-grid gap-1">
+            <a href="/menu/{{ table.table_number }}" class="btn btn-sm btn-dark">
+              <i class="bi bi-eye me-1"></i>View Menu
+            </a>
+            <a href="{{ url_for('static', filename='qrcodes/table_' ~ table.table_number ~ '.png') }}"
+               download class="btn btn-sm btn-outline-warning">
+              <i class="bi bi-download me-1"></i>QR Code
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

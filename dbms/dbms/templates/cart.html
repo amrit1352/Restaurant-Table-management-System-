@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Cart – Table {{ table_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center mb-4 gap-3">
+    <a href="/menu/{{ table_number }}" class="btn btn-outline-warning rounded-pill">
+      <i class="bi bi-arrow-left me-1"></i>Back to Menu
+    </a>
+    <div>
+      <h2 class="text-white fw-bold mb-0">
+        <i class="bi bi-cart3 text-warning me-2"></i>Your Cart
+      </h2>
+      <small class="text-white-50">Table {{ table_number }}</small>
+    </div>
+  </div>
+
+  {% if cart_items %}
+
+  <div class="row g-4">
+
+    <!-- ── Cart Items ────────────────────────────── -->
+    <div class="col-lg-8">
+      <div class="dark-card rounded-4 p-4">
+        <h5 class="text-white mb-4">
+          <i class="bi bi-bag text-warning me-2"></i>Order Items
+        </h5>
+
+        {% for item in cart_items %}
+        <div class="cart-item-row d-flex align-items-center justify-content-between p-3 rounded-3 mb-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="item-icon">
+              <i class="bi bi-bowl-hot text-warning fs-4"></i>
+            </div>
+            <div>
+              <h6 class="text-white mb-0 fw-semibold">{{ item.item_name }}</h6>
+              <small class="text-white-50">₹{{ item.price }} each</small>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-3">
+            <!-- Quantity controls -->
+            <div class="qty-control d-flex align-items-center gap-2">
+              <form method="POST" class="d-inline">
+                <input type="hidden" name="action" value="remove">
+                <input type="hidden" name="item_id" value="{{ item.item_id }}">
+                <button type="submit" class="btn btn-sm btn-dark rounded-circle qty-btn">
+                  <i class="bi bi-dash"></i>
+                </button>
+              </form>
+
+              <span class="text-white fw-bold fs-5 qty-num">{{ item.quantity }}</span>
+
+              <form method="POST" class="d-inline">
+                <input type="hidden" name="action" value="add">
+                <input type="hidden" name="item_id" value="{{ item.item_id }}">
+                <button type="submit" class="btn btn-sm btn-warning rounded-circle qty-btn">
+                  <i class="bi bi-plus"></i>
+                </button>
+              </form>
+            </div>
+
+            <span class="text-warning fw-bold fs-6">₹{{ item.subtotal }}</span>
+
+            <!-- Remove item -->
+            <form method="POST">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="item_id" value="{{ item.item_id }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"
+                      title="Remove item">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Clear cart -->
+        <form method="POST" class="text-end mt-3">
+          <input type="hidden" name="action" value="clear">
+          <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill"
+                  onclick="return confirm('Clear entire cart?')">
+            <i class="bi bi-trash me-1"></i>Clear Cart
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Order Summary ──────────────────────────── -->
+    <div class="col-lg-4">
+      <div class="dark-card rounded-4 p-4 sticky-top" style="top:80px;">
+        <h5 class="text-white mb-4">
+          <i class="bi bi-receipt text-warning me-2"></i>Bill Summary
+        </h5>
+
+        <div class="summary-row d-flex justify-content-between py-2 border-bottom border-secondary">
+          <span class="text-white-50">Subtotal</span>
+          <span class="text-white">₹{{ "%.2f" | format(total) }}</span>
+        </div>
+        <div class="summary-row d-flex justify-content-between py-2 border-bottom border-secondary">
+          <span class="text-white-50">GST (5%)</span>
+          <span class="text-white">₹{{ "%.2f" | format(tax) }}</span>
+        </div>
+        <div class="summary-row d-flex justify-content-between py-2 mb-4">
+          <span class="text-warning fw-bold fs-5">Total</span>
+          <span class="text-warning fw-bold fs-5">₹{{ "%.2f" | format(grand_total) }}</span>
+        </div>
+
+        <!-- Place Order button -->
+        <form action="/order/{{ table_number }}" method="POST">
+          <button type="submit" class="btn btn-warning btn-lg w-100 rounded-pill shadow-lg fw-bold">
+            <i class="bi bi-check2-circle me-2"></i>Place Order
+          </button>
+        </form>
+        <p class="text-white-50 small text-center mt-3 mb-0">
+          <i class="bi bi-shield-check me-1"></i>
+          Your order will be prepared fresh
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  {% else %}
+  <!-- Empty cart state -->
+  <div class="text-center py-5">
+    <i class="bi bi-cart-x display-1 text-warning mb-4 d-block"></i>
+    <h3 class="text-white fw-bold mb-2">Your cart is empty</h3>
+    <p class="text-white-50 mb-4">Browse our menu and add some delicious items!</p>
+    <a href="/menu/{{ table_number }}" class="btn btn-warning btn-lg rounded-pill px-5">
+      <i class="bi bi-arrow-left me-2"></i>Browse Menu
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
